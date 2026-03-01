@@ -1,7 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { extractAndStoreTrackingData, type TrackingData } from './lib/utm';
 
 export default function BookingForm({ onBack }: { onBack: () => void }) {
     const [step, setStep] = useState(1);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [trackingInfo, setTrackingInfo] = useState<TrackingData | null>(null);
+
+    // Extract UTMs and fbclid on mount
+    useEffect(() => {
+        setTrackingInfo(extractAndStoreTrackingData());
+    }, []);
+
     const [formData, setFormData] = useState({
         industry: '',
         teamSize: '',
@@ -11,7 +21,49 @@ export default function BookingForm({ onBack }: { onBack: () => void }) {
         company: ''
     });
 
-    const handleNext = () => setStep(s => Math.min(s + 1, 4));
+    const handleNext = async () => {
+        if (step === 3) {
+            setIsSubmitting(true);
+            try {
+                const eventId = uuidv4();
+
+                const payload = {
+                    event_id: eventId,
+                    name: formData.fullName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    answers: {
+                        industry: formData.industry,
+                        teamSize: formData.teamSize,
+                        company: formData.company
+                    },
+                    ...(trackingInfo || extractAndStoreTrackingData())
+                };
+
+                // POST to Vercel Serverless Function
+                const response = await fetch('/api/lead', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    setStep(4);
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    console.error("Submission failed:", data);
+                    alert("Submission failed. Please try again.");
+                }
+            } catch (error) {
+                console.error("Submission failed:", error);
+                alert("Submission failed. Please try again.");
+            } finally {
+                setIsSubmitting(false);
+            }
+        } else {
+            setStep(s => Math.min(s + 1, 4));
+        }
+    };
     const handleBack = () => {
         if (step === 1) onBack();
         else setStep(s => Math.max(s - 1, 1));
@@ -107,8 +159,8 @@ export default function BookingForm({ onBack }: { onBack: () => void }) {
                         <button onClick={handleBack} className="px-6 py-3 font-semibold text-[#131628]/60 hover:text-[#131628] transition-colors rounded-lg hover:bg-gray-50">
                             {step === 1 ? 'Cancel' : 'Back'}
                         </button>
-                        <button onClick={handleNext} disabled={!isStepValid()} className={`px-8 py-3 font-bold text-white rounded-lg transition-all ${isStepValid() ? 'bg-[#6f00ff] hover:bg-[#5a00cc] hover:shadow-md' : 'bg-gray-300 cursor-not-allowed'}`}>
-                            {step === 3 ? 'Submit Request' : 'Continue'}
+                        <button onClick={handleNext} disabled={!isStepValid() || isSubmitting} className={`px-8 py-3 font-bold text-white rounded-lg transition-all ${(isStepValid() && !isSubmitting) ? 'bg-[#6f00ff] hover:bg-[#5a00cc] hover:shadow-md' : 'bg-gray-300 cursor-not-allowed'}`}>
+                            {isSubmitting ? 'Submitting...' : step === 3 ? 'Submit Request' : 'Continue'}
                         </button>
                     </div>
                 )}

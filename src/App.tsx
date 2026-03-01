@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import BookingForm from './BookingForm';
+import { fireMetaPixelEvent } from './lib/meta';
 import './index.css';
 
 function App() {
   const [isBooking, setIsBooking] = useState(false);
+
+  useEffect(() => {
+    // Optional micro-event on page load
+    fireMetaPixelEvent('ViewContent');
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start font-sans tracking-tight relative overflow-hidden bg-[#ffffff]">
@@ -17,8 +23,8 @@ function App() {
 
       {/* Clean Flat Background */}
       {!isBooking ? (
-        <main className="flex-1 w-full max-w-[850px] px-4 py-8 md:py-12 flex flex-col items-center justify-between min-h-[calc(100vh-80px)] relative z-10 text-[#131628]">
-          <div className="w-full flex-1 flex flex-col items-center justify-center space-y-10 md:space-y-16">
+        <main className="flex-1 w-full max-w-[850px] px-4 py-12 md:py-20 flex flex-col items-center justify-center min-h-[calc(100vh-140px)] relative z-10 text-[#131628] mx-auto">
+          <div className="w-full flex flex-col items-center justify-center space-y-12 md:space-y-14">
             <div className="text-center space-y-5 w-full max-w-[800px]">
               <h1 className="text-[32px] md:text-[48px] font-[800] leading-[1.12]">
                 Increase Profit by Removing Operational Drag (in 7 Days)
@@ -28,18 +34,18 @@ function App() {
               </p>
             </div>
 
-            <div className="w-full max-w-[600px] space-y-4 font-semibold text-[15px] md:text-[17px] mx-auto flex flex-col items-center">
-              <div className="w-auto">
+            <div className="w-full max-w-[650px] space-y-5 font-semibold text-[16px] md:text-[18px] mx-auto flex flex-col items-center">
+              <div className="w-auto flex flex-col space-y-4">
                 {[
                   "Cut repetitive admin and coordination work",
                   "Faster onboarding for customers + new hires",
                   "Clear workflows your team actually uses (no “AI experiments”)"
                 ].map((bullet, idx) => (
-                  <div key={idx} className="flex items-center space-x-3 justify-start mb-2">
-                    <svg className="w-5 h-5 text-[#6f00ff] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <div key={idx} className="flex items-start space-x-4 justify-start">
+                    <svg className="w-6 h-6 text-[#6f00ff] flex-shrink-0 mt-[2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    <span className="leading-tight text-left">{bullet}</span>
+                    <span className="leading-tight text-left text-gray-800">{bullet}</span>
                   </div>
                 ))}
               </div>
@@ -47,7 +53,10 @@ function App() {
 
             <div className="flex flex-col items-center w-full">
               <button
-                onClick={() => setIsBooking(true)}
+                onClick={() => {
+                  fireMetaPixelEvent('Contact', { placement: 'hero' });
+                  setIsBooking(true);
+                }}
                 className="bg-[#6f00ff] hover:bg-[#5a00cc] text-white flex items-center justify-center text-[20px] md:text-[22px] font-[800] px-12 py-4 md:py-5 rounded-[50px] transition-colors duration-200 w-full max-w-[380px] md:max-w-[420px]"
               >
                 Book a Free Strategy Call
@@ -64,8 +73,8 @@ function App() {
             </div>
           </div>
 
-          <div className="w-full max-w-[700px] bg-gray-50/50 border-l-[3px] border-[#6f00ff] p-5 md:p-6 rounded-r-xl text-left z-10 mx-auto mt-12 md:mt-16 mb-4">
-            <h3 className="text-[16px] font-black mb-2">P.S.</h3>
+          <div className="w-full max-w-[700px] bg-gray-50/80 border-l-[4px] border-[#6f00ff] p-6 md:p-8 rounded-r-xl text-left z-10 mx-auto mt-16 md:mt-24 mb-8 shadow-sm">
+            <h3 className="text-[17px] font-black mb-3">P.S.</h3>
             <p className="text-[14px] md:text-[15px] text-gray-600 leading-relaxed font-medium">
               If you’re already investing $500K–$2M/year in payroll, this call shows where AI can create leverage without months of trial and error.
             </p>
